@@ -1,5 +1,5 @@
 /**
- * Generate samples/toy-schedule.pdf and samples/photos/*.jpg (with EXIF capture times)
+ * Generate public/samples/toy-schedule.pdf and public/samples/photos/*.jpg (with EXIF capture times)
  * so the whole flow can be tried without a real conference.
  *
  *   npm run samples
@@ -15,7 +15,7 @@ import { TOY } from "./toyConference";
 // piexifjs predates EXIF 2.31; teach it OffsetTimeOriginal.
 piexif.TAGS.Exif[0x9011] ??= { name: "OffsetTimeOriginal", type: "Ascii" };
 
-const OUT = path.resolve(process.argv[2] ?? "samples");
+const OUT = path.resolve(process.argv[2] ?? "public/samples");
 
 export async function makeSchedulePdf(): Promise<Uint8Array> {
   const doc = await PDFDocument.create();

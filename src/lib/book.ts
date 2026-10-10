@@ -181,6 +181,11 @@ export async function buildBook(confId: number, opts: BookOptions = {}): Promise
   }
 
   await insertContents(doc, fonts, w.safe, toc);
+  doc.getPages().forEach((page, i) => {
+    if (i === 0) return;
+    const n = String(i + 1);
+    page.drawText(n, { x: W / 2 - fonts.regular.widthOfTextAtSize(n, 8) / 2, y: 24, size: 8, font: fonts.regular, color: MUTED });
+  });
   return doc.save();
 }
 

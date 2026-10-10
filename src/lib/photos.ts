@@ -18,10 +18,14 @@ export interface IncomingPhoto {
 /**
  * How photos arrive:
  *  - auto:    batch upload; match each photo by its capture time
- *  - capture: free capture in the app; like auto, but "now" is a fallback capture time
+ *  - capture: free capture in the app; like auto, but "now" is a fallback capture time. If the
+ *             user said which of the parallel sessions they are in, that is remembered first.
  *  - talk:    the user opened a talk and added photos to it directly
  */
-export type UploadMode = { kind: "auto" } | { kind: "capture"; capturedAt: number } | { kind: "talk"; talkId: number };
+export type UploadMode =
+  | { kind: "auto" }
+  | { kind: "capture"; capturedAt: number; sessionId?: number; forceTime?: boolean }
+  | { kind: "talk"; talkId: number };
 
 export interface IngestResult {
   name: string;
@@ -65,6 +69,11 @@ export async function ingestPhotos(confId: number, uploader: string, files: Inco
     fixedTalk = { talkId: t.id, sessionId: t.session_id };
     repo.setPresence(confId, uploader, t.session_id);
   }
+  if (mode.kind === "capture" && mode.sessionId) {
+    const s = repo.getSession(mode.sessionId);
+    if (!s || s.conference_id !== confId) throw new Error("Session not found");
+    repo.setPresence(confId, uploader, s.id);
+  }
   const presenceCache = new Map<string, Set<number>>();
   const presenceOf = (u: string) => {
     if (!presenceCache.has(u)) presenceCache.set(u, repo.getPresence(confId, u));
@@ -80,7 +89,10 @@ export async function ingestPhotos(confId: number, uploader: string, files: Inco
     }
     try {
       const exif = await readExifTime(f.data);
-      const time = resolveCaptureTime(
+      const time =
+        mode.kind === "capture" && mode.forceTime
+          ? { takenAt: new Date(mode.capturedAt).toISOString(), source: "manual" as const }
+          : resolveCaptureTime(
         {
           exifDateTime: exif.dateTime,
           exifOffset: exif.offset,
