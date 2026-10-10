@@ -1,0 +1,39 @@
+{
+  "name": "conferencer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Turn a conference schedule PDF into a calendar, sort everyone's photos into the talks they were taken in, and export a conference book.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "samples": "tsx scripts/make-samples.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "exifr": "^7.1.3",
+    "luxon": "^3.7.2",
+    "next": "15.5.27",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "4.10.38",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/luxon": "^3.6.2",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "piexifjs": "^1.0.6",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.3",
+    "vitest": "^5.0.3"
+  },
+  "overrides": {
+    "postcss": "^8.5.29"
+  }
+}
