@@ -10,7 +10,32 @@ interface Item {
   h: number;
 }
 
+/** A text item with its position, for layout-aware (table) parsing. */
+export interface PdfCell {
+  text: string;
+  x: number;
+  x2: number;
+  h: number;
+}
+
+/** One visual row: cells left to right, plus its baseline and font size. */
+export interface PdfRow {
+  page: number;
+  y: number;
+  h: number;
+  cells: PdfCell[];
+}
+
+export interface PdfLayout {
+  lines: string[];
+  rows: PdfRow[];
+}
+
 export async function extractPdfLines(data: Uint8Array): Promise<string[]> {
+  return (await extractPdfLayout(data)).lines;
+}
+
+export async function extractPdfLayout(data: Uint8Array): Promise<PdfLayout> {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const doc = await pdfjs.getDocument({
     data: new Uint8Array(data), // pdf.js detaches the buffer it is given
@@ -21,6 +46,7 @@ export async function extractPdfLines(data: Uint8Array): Promise<string[]> {
   }).promise;
 
   const lines: string[] = [];
+  const outRows: PdfRow[] = [];
   for (let p = 1; p <= doc.numPages; p++) {
     const page = await doc.getPage(p);
     const content = await page.getTextContent();
@@ -39,6 +65,12 @@ export async function extractPdfLines(data: Uint8Array): Promise<string[]> {
     }
     for (const row of rows) {
       row.sort((a, b) => a.x - b.x);
+      outRows.push({
+        page: p,
+        y: row[0].y,
+        h: Math.max(...row.map((i) => i.h)),
+        cells: row.map((i) => ({ text: i.str.replace(/\s+/g, " ").trim(), x: i.x, x2: i.x + i.w, h: i.h })),
+      });
       let line = "";
       let prevEnd: number | null = null;
       for (const it of row) {
@@ -53,5 +85,5 @@ export async function extractPdfLines(data: Uint8Array): Promise<string[]> {
     }
   }
   await doc.destroy();
-  return lines.filter(Boolean);
+  return { lines: lines.filter(Boolean), rows: outRows };
 }

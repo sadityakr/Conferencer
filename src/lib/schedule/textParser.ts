@@ -17,18 +17,18 @@ const MONTHS =
 const WEEKDAY = "(?:mon|tue|wed|thu|fri|sat|sun)[a-z]*\\.?,?\\s*";
 
 const TIME = "(\\d{1,2})[:.h](\\d{2})\\s*(am|pm)?";
-const TIME_RANGE = new RegExp(`${TIME}\\s*(?:[-–—]|to)\\s*${TIME}`, "i");
+export const TIME_RANGE = new RegExp(`${TIME}\\s*(?:[-–—]|to)\\s*${TIME}`, "i");
 
 const ROOM_WORDS = "room|hall|auditorium|aula|theatre|theater|salon|track|hörsaal|raum|saal|ballroom|stage";
 // "Room A", "Hall 2", "Track 3" — or "Main Hall", "Seminar Room 1.04", "Lecture Theatre B".
 const ROOM_START = new RegExp(`^(?:${ROOM_WORDS})\\b`, "i");
 const ROOM_END = new RegExp(`\\b(?:${ROOM_WORDS})(?:\\s+[\\w.-]{1,5})?$`, "i");
-const isRoom = (f: string) => f.length <= 30 && (ROOM_START.test(f) || ROOM_END.test(f));
+export const isRoom = (f: string) => f.length <= 30 && (ROOM_START.test(f) || ROOM_END.test(f));
 const SESSION_RE = /\b(session|symposium|plenary|keynote session|workshop|tutorial|poster)\b/i;
 const CHAIR_RE = /^(chair|chairs|chaired by|moderator)\s*:?\s*/i;
-const BREAK_RE = /^(coffee|lunch|break|registration|dinner|reception|welcome drinks|end of day)\b/i;
+export const BREAK_RE = /^(coffee|lunch|break|registration|dinner|reception|welcome drinks|end of day)\b/i;
 
-function to24(h: string, m: string, ampm?: string): string {
+export function to24(h: string, m: string, ampm?: string): string {
   let hh = parseInt(h, 10);
   if (ampm) {
     const pm = ampm.toLowerCase() === "pm";
@@ -73,13 +73,13 @@ function splitTitleSpeakers(fields: string[]): { title: string; speakers: string
   return { title: one, speakers: "" };
 }
 
-const toMin = (hhmm: string) => parseInt(hhmm.slice(0, 2), 10) * 60 + parseInt(hhmm.slice(3), 10);
+export const toMin = (hhmm: string) => parseInt(hhmm.slice(0, 2), 10) * 60 + parseInt(hhmm.slice(3), 10);
 
 export function parseScheduleText(lines: string[], opts: { defaultYear?: number } = {}): ParsedSchedule {
   const out: ParsedSchedule = { sessions: [] };
   let date: string | null = null;
   let current: ParsedSession | null = null;
-  let year = opts.defaultYear;
+  let year = opts.defaultYear ?? guessYear(lines);
 
   for (const raw of lines) {
     const line = raw.replace(/\s+/g, " ").trim();
@@ -157,4 +157,11 @@ export function parseScheduleText(lines: string[], opts: { defaultYear?: number 
     }
   }
   return out;
+}
+
+/** The year a programme is about, for day headings like "Monday, October 5th" that omit it. */
+export function guessYear(lines: string[]): number | undefined {
+  const counts = new Map<number, number>();
+  for (const l of lines) for (const m of l.matchAll(/\b(20\d{2})\b/g)) counts.set(+m[1], (counts.get(+m[1]) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 }

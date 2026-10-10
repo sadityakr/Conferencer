@@ -145,7 +145,7 @@ export async function buildBook(confId: number, opts: BookOptions = {}): Promise
   }
   const people = [...new Set(photos.map((p) => p.uploader))].sort();
   w.text(opts.uploader ? `Personal conference book of ${opts.uploader}` : "Group conference book", 14, { bold: true, color: ACCENT, gap: 4 });
-  w.text(`${photos.length} photo${photos.length === 1 ? "" : "s"} · ${entries.filter((e) => e.talk).length} talks`, 11, { color: MUTED, gap: 4 });
+  w.text(`${photos.length} photo${photos.length === 1 ? "" : "s"} · ${entries.filter((e) => e.talk).length} talk${entries.filter((e) => e.talk).length === 1 ? "" : "s"}`, 11, { color: MUTED, gap: 4 });
   if (!opts.uploader && people.length) w.text(`Contributors: ${people.join(", ")}`, 11, { color: MUTED });
 
   // Body; contents pages are inserted afterwards once page numbers are known.
